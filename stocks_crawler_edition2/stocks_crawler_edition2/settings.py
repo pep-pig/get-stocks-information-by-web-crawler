@@ -15,7 +15,8 @@ SPIDER_MODULES = ['stocks_crawler_edition2.spiders']
 NEWSPIDER_MODULE = 'stocks_crawler_edition2.spiders'
 
 
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
+
+#设置user_agent池
 MY_USER_AGENT = [
    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506)",
@@ -54,18 +55,22 @@ MY_USER_AGENT = [
    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
 ]
 
-# Obey robots.txt rules
+
+#是否遵循robots协议
 ROBOTSTXT_OBEY = False
 
-# Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 2
+# 配置最大并发请求数(default: 16)
+#CONCURRENT_REQUESTS = 2
 
-# Configure a delay for requests for the same website (default: 0)
+# 配置爬取延迟
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1
-# The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 2
+#DOWNLOAD_DELAY = 1
+
+#每个域最大允许的并发请求数
+#CONCURRENT_REQUESTS_PER_DOMAIN = 2
+
+#每个ip的最大请求数，只能正对不同的网站
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -74,19 +79,22 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 2
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
 
-# Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-#}
+# 设置请求头:
+DEFAULT_REQUEST_HEADERS = {
+   'Accept': '*/*',
+   'Accept-Encoding': 'gzip, deflate, sdch',
+   'Accept-Language': 'zh-CN,zh;q=0.8'
+}
 
-# Enable or disable spider middlewares
+
+# 激活或禁用spider中间件
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
 #    'stocks_crawler_edition2.middlewares.StocksCrawlerEdition2SpiderMiddleware': 543,
 #}
-HTTPPROXY_ENABLED=True
-# Enable or disable downloader middlewares
+
+
+# 激活或禁用下载器中间件，数字越大越靠近downloader，数字越小越靠近引擎，None表示禁用
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
 #    'stocks_crawler_edition2.middlewares.MyCustomDownloaderMiddleware': 543,
@@ -103,11 +111,12 @@ DOWNLOADER_MIDDLEWARES = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
 
-# Configure item pipelines
+# 配置item_pipelines，item将按照数字由小到大依次经过item_pipeline 处理
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    'stocks_crawler_edition2.pipelines.WritePipeline': 300,
 }
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
