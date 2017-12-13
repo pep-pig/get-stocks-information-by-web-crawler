@@ -60,12 +60,12 @@ MY_USER_AGENT = [
 ROBOTSTXT_OBEY = False
 
 # 配置最大并发请求数(default: 16)
-#CONCURRENT_REQUESTS = 2
+CONCURRENT_REQUESTS = 1
 
 # 配置爬取延迟
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 0.5
 
 #每个域最大允许的并发请求数
 #CONCURRENT_REQUESTS_PER_DOMAIN = 2
@@ -101,8 +101,8 @@ DOWNLOADER_MIDDLEWARES = {
 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware':None,
 'scrapy.downloadermiddlewares.retry.RetryMiddleware':None,
 'stocks_crawler_edition2.middlewares.MyUserAgentMiddleware': 400,
-'stocks_crawler_edition2.middlewares.ProxyMiddleWare':750,
-'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware':None
+'stocks_crawler_edition2.middlewares.ProxyMiddleWare':None,
+#'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware':None
 }
 
 # Enable or disable extensions
@@ -114,7 +114,9 @@ DOWNLOADER_MIDDLEWARES = {
 # 配置item_pipelines，item将按照数字由小到大依次经过item_pipeline 处理
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
+   'stocks_crawler_edition2.pipelines.DropUncompleteItems':200,
    'stocks_crawler_edition2.pipelines.WritePipeline': 300,
+   'stocks_crawler_edition2.pipelines.SaveToMongodbPipeline':400
 }
 
 
@@ -138,3 +140,9 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+#将数据存入mongodb数据库，对mongdb进行配置
+MONGODB_HOST = '127.0.0.1'
+MONGODB_PORT = 27017
+MONGODB_DBNAME = 'stocks'
+MONGODB_COLLECTION_NAME = 'stocks_info'
