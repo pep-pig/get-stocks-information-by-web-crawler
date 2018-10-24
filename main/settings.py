@@ -9,12 +9,13 @@
 #     http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #     http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'stocks_crawler_edition2'
+# scrapy 的这个配置文件，有点类似与spring的依赖注入，要的各种参数都写在这里了
+# 程序要什么，自动在这个文件中搜索。可扩展性大大增强了
 
-SPIDER_MODULES = ['stocks_crawler_edition2.spiders']
-NEWSPIDER_MODULE = 'stocks_crawler_edition2.spiders'
+BOT_NAME = 'stocks_info_spider'
 
-
+SPIDER_MODULES = ['main.spiders']
+NEWSPIDER_MODULE = 'main.spiders'
 
 #设置user_agent池
 MY_USER_AGENT = [
@@ -59,18 +60,18 @@ MY_USER_AGENT = [
 #是否遵循robots协议
 ROBOTSTXT_OBEY = False
 
-# 配置最大并发请求数(default: 16)
-CONCURRENT_REQUESTS = 1
+# 配置最大并发请求数,一个爬虫可能不只同时爬取一个网站，这是总体限制(default: 16)
+# 而后面的CONCURRENT_REQUESTS_PER_DOMAIN与CONCURRENT_REQUESTS_PER_IP则是对单个域的
+CONCURRENT_REQUESTS = 20
 
 # 配置爬取延迟
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.5
+DOWNLOAD_DELAY = 1
 
-#每个域最大允许的并发请求数
-#CONCURRENT_REQUESTS_PER_DOMAIN = 2
-
-#每个ip的最大请求数，只能正对不同的网站
+#每个域最大允许的并发请求数，以下两个设置只有一个生效
+CONCURRENT_REQUESTS_PER_DOMAIN = 20
+#每个ip的最大请求数，只能针对相同的网站
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -81,10 +82,11 @@ DOWNLOAD_DELAY = 0.5
 
 # 设置请求头:
 DEFAULT_REQUEST_HEADERS = {
-   'Accept': '*/*',
-   'Accept-Encoding': 'gzip, deflate, sdch',
-   'Accept-Language': 'zh-CN,zh;q=0.8'
-}
+      'Accept': '*/*',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36',
+      'Accept-Encoding': 'gzip, deflate, sdch',
+      'Accept-Language': 'zh-CN,zh;q=0.8'
+   }
 
 
 # 激活或禁用spider中间件
@@ -95,15 +97,38 @@ DEFAULT_REQUEST_HEADERS = {
 
 
 # 激活或禁用下载器中间件，数字越大越靠近downloader，数字越小越靠近引擎，None表示禁用
+# scrapy的引擎到downloader之间的数据是双向的，引擎发送request请求给downloader之间要
+# 所有中间件的process_request函数处理，而从downloader发送的response则要被所有中间件
+# 的process_response处理，处理顺序以数字排列，注意那些处理request的中间件没有process_response，
+# 方法，同样处理response的中间件也没有process_request方法，每一个中件间他只会处理request或response
+# 中的一个，你自己定义的中间件，要定义process_request和process_response才能识别。
+# 以下是scrapy默认的顺序
+
+#    'scrapy.contrib.downloadermiddleware.robotstxt.RobotsTxtMiddleware': 100,
+#    'scrapy.contrib.downloadermiddleware.httpauth.HttpAuthMiddleware': 300,
+#    'scrapy.contrib.downloadermiddleware.downloadtimeout.DownloadTimeoutMiddleware': 350,
+#    'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': 400,
+#    'scrapy.contrib.downloadermiddleware.retry.RetryMiddleware': 500,
+#    'scrapy.contrib.downloadermiddleware.defaultheaders.DefaultHeadersMiddleware': 550,
+#    'scrapy.contrib.downloadermiddleware.redirect.MetaRefreshMiddleware': 580,
+#    'scrapy.contrib.downloadermiddleware.httpcompression.HttpCompressionMiddleware': 590,
+#    'scrapy.contrib.downloadermiddleware.redirect.RedirectMiddleware': 600,
+#    'scrapy.contrib.downloadermiddleware.cookies.CookiesMiddleware': 700,
+#    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 750,
+#    'scrapy.contrib.downloadermiddleware.chunked.ChunkedTransferMiddleware': 830,
+#    'scrapy.contrib.downloadermiddleware.stats.DownloaderStats': 850,
+#    'scrapy.contrib.downloadermiddleware.httpcache.HttpCacheMiddleware': 900,
+
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-#    'stocks_crawler_edition2.middlewares.MyCustomDownloaderMiddleware': 543,
+'main.middlewares.MyUserAgentMiddleware': 400,
 'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware':None,
-'scrapy.downloadermiddlewares.retry.RetryMiddleware':None,
-'stocks_crawler_edition2.middlewares.MyUserAgentMiddleware': 400,
-'stocks_crawler_edition2.middlewares.ProxyMiddleWare':None,
-#'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware':None
+'scrapy.downloadermiddlewares.retry.RetryMiddleware':500,
 }
+RETRY_ENABLED=True
+RETRY_TIMES=5
+RETRY_HTTP_CODES=[500, 502, 503, 504, 400, 408,505,404]
+
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -114,9 +139,8 @@ DOWNLOADER_MIDDLEWARES = {
 # 配置item_pipelines，item将按照数字由小到大依次经过item_pipeline 处理
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'stocks_crawler_edition2.pipelines.DropUncompleteItems':200,
-   'stocks_crawler_edition2.pipelines.WritePipeline': 300,
-   'stocks_crawler_edition2.pipelines.SaveToMongodbPipeline':400
+   #'main.pipelines.DropUncompleteItems':200,
+   'main.pipelines.MySQLPipeline': 300,
 }
 
 
@@ -142,7 +166,8 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 #将数据存入mongodb数据库，对mongdb进行配置
-MONGODB_HOST = '127.0.0.1'
-MONGODB_PORT = 27017
-MONGODB_DBNAME = 'stocks'
-MONGODB_COLLECTION_NAME = 'stocks_info'
+MYSQL_HOST ='39.108.111.7'
+MYSQL_PORT = 3306
+MYSQL_DBNAME = 'stock'
+MYSQL_USER = 'fengjb'
+MYSQL_PASSWD = 'Zzu@20110680108'
